@@ -32,16 +32,16 @@ const renderInputData = ({ edges, vertices }) => {
   }
 };
 
-const renderHedgeFaces = ({ vertices, edges, faces }, renderCentroid = false) => {
-  faces.map((face, idx) => {
+const renderHedgeFaces = ([{ vertices, edges, faces },{getFaceEdgesFromEdgeIdx}], renderCentroid = false) => {
+  Object.entries(faces).map(([k, v],idx)=>{
     if(idx==9) return;
     ctx.fillStyle = getRandomColor();
     ctx.beginPath();
     const faceVertices = [];
-    face.map((globalEdgeIdx, faceEdgeIdx) => {
-      const startPt = vertices[edges[globalEdgeIdx].fromIdx].point;
+    getFaceEdgesFromEdgeIdx(v.edgeIdx).map((edge,edgeIdx)=>{
+      const startPt = vertices[edge.fromIdx].point;
       faceVertices.push(startPt);
-      if (faceEdgeIdx === 0) ctx.moveTo(...startPt);
+      if (edgeIdx === 0) ctx.moveTo(...startPt);
       else ctx.lineTo(...startPt);
     });
     ctx.closePath();
