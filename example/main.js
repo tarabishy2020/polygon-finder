@@ -7,9 +7,10 @@ import {
 } from "./BasicCanvasSetup";
 import { parseVEJson } from "../InputData";
 import { createHalfEdgeStore } from "../HalfEdge";
-
+import {averagePoints} from '../Utilities'
 let parsed = null;
 const drawingThickness = 0.01;
+
 const getRandomColor = () =>
   `rgba(${255 * Math.random()},${255 * Math.random()},${
     255 * Math.random()
@@ -30,14 +31,8 @@ const renderInputData = ({ edges, vertices }) => {
     ctx.fill();
   }
 };
-const averagePoints = (pts) => {
-  const length = pts.length;
-  const avg = new Array(pts[0].length).fill(0);
-  pts.map((pt) => pt.map((item, idx) => (avg[idx] += item)));
-  return avg.map((x) => x / length*1.0);
-};
+
 const renderHedgeFaces = ({ edges, faces }, renderCentroid = false) => {
-  console.log(faces.length)
   faces.map((face, idx) => {
     if(idx==9) return;
     ctx.fillStyle = getRandomColor();
@@ -54,7 +49,6 @@ const renderHedgeFaces = ({ edges, faces }, renderCentroid = false) => {
     if (renderCentroid) {
       const r = drawingThickness * 4;
       const avg = averagePoints(faceVertices);
-      // console.log(avg)
       ctx.fillStyle='rgba(0,0,0,1)'
       ctx.beginPath();
       ctx.arc(...avg, r, 0, 2 * Math.PI, false);
@@ -86,6 +80,6 @@ const inputAreaTextChangedHandler = (e) => {
   render(parsed);
 };
 
-buttonsContainer;
+// buttonsContainer;
 inputArea.addEventListener("keyup", inputAreaTextChangedHandler, false);
 window.addEventListener("resize", resizeCanvasHandler);
