@@ -70,7 +70,12 @@ const addExampleButtons = (parentNodeId, inputArea) => {
       inputArea.dispatchEvent(new Event("keyup"));
     };
   });
-  return element;
+
+  const indexInput = document.createElement("input");
+  indexInput.placeholder='enter index';
+  element.appendChild(indexInput)
+  
+  return [element, indexInput];
 };
 const createButton=(parent,text,onClickHandler)=>{
   const btn = document.createElement("button");
@@ -81,4 +86,4 @@ const createButton=(parent,text,onClickHandler)=>{
 }
 export const [ctx, resizeCanvasFn] = createCanvas("app");
 export const inputArea = createInputArea("app");
-export const buttonsContainer= addExampleButtons("app", inputArea);
+export const [buttonsContainer, indexInput]= addExampleButtons("app", inputArea);

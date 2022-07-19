@@ -4,10 +4,11 @@ import {
   resizeCanvasFn,
   inputArea,
   buttonsContainer,
+  indexInput,
 } from "./BasicCanvasSetup";
 import { parseVEJson } from "../InputData";
 import { createHalfEdgeStore } from "../HalfEdge";
-import {averagePoints} from '../Utilities'
+import { averagePoints } from "../Utilities";
 let parsed = null;
 const drawingThickness = 0.01;
 
@@ -16,13 +17,22 @@ const getRandomColor = () =>
     255 * Math.random()
   },0.5)`;
 
+const drawLine = (from, to) => {
+  ctx.beginPath();
+  ctx.lineWidth = drawingThickness;
+  ctx.moveTo(...from);
+  ctx.lineTo(...to);
+  ctx.stroke();
+};
+const drawFace = (vertices) => {
+  vertices.map((vertex, idx) => {
+    if (idx === 0) ctx.moveTo(...vertex);
+    else ctx.lineTo(...vertex);
+  });
+};
 const renderInputData = ({ edges, vertices }) => {
   for (const edge of edges) {
-    ctx.beginPath();
-    ctx.lineWidth = drawingThickness;
-    ctx.moveTo(...vertices[edge[0]]);
-    ctx.lineTo(...vertices[edge[1]]);
-    ctx.stroke();
+    drawLine(vertices[edge[0]], vertices[edge[1]]);
   }
   const r = drawingThickness * 4;
   for (const vertex of vertices) {
@@ -31,31 +41,53 @@ const renderInputData = ({ edges, vertices }) => {
     ctx.fill();
   }
 };
-
-const renderHedgeFaces = ([{ vertices, edges, faces },{getFaceEdgesFromEdgeIdx}], renderCentroid = false) => {
-  Object.entries(faces).map(([k, v],idx)=>{
-    if(idx==9) return;
+const renderFaceNeighbors = (
+  [
+    { vertices, faces },
+    { iterateFaceFromEdgeIdx, getFaceNeighborsFromFaceName },
+  ],
+  idx
+) => {
+  if(Object.keys(faces).length < idx)return;
+  render(parsed);
+  const faceName = Object.keys(faces)[idx];
+  const centroidFromName = (name) => {
+    const selectedFacePoints = iterateFaceFromEdgeIdx(
+      faces[name].edgeIdx,
+      (x) => vertices[x.fromIdx].point
+    );
+    return averagePoints(selectedFacePoints);
+  };
+  const from = centroidFromName(faceName);
+  const neighborNames = getFaceNeighborsFromFaceName(faceName);
+  const neighborCentroids = neighborNames.map((name) => centroidFromName(name));
+  neighborCentroids.map((to) => drawLine(from, to));
+};
+const renderHedgeFaces = (
+  [{ vertices, edges, faces }, { iterateFaceFromEdgeIdx }],
+  renderCentroid = false
+) => {
+  Object.entries(faces).map(([k, face], idx) => {
+    if (idx == 9) return;
     ctx.fillStyle = getRandomColor();
+    const faceVertices = iterateFaceFromEdgeIdx(
+      face.edgeIdx,
+      (x) => vertices[x.fromIdx].point
+    );
     ctx.beginPath();
-    const faceVertices = [];
-    getFaceEdgesFromEdgeIdx(v.edgeIdx).map((edge,edgeIdx)=>{
-      const startPt = vertices[edge.fromIdx].point;
-      faceVertices.push(startPt);
-      if (edgeIdx === 0) ctx.moveTo(...startPt);
-      else ctx.lineTo(...startPt);
-    });
+    drawFace(faceVertices);
     ctx.closePath();
     ctx.fill();
     if (renderCentroid) {
       const r = drawingThickness * 4;
       const avg = averagePoints(faceVertices);
-      ctx.fillStyle='rgba(0,0,0,1)'
+      ctx.fillStyle = "rgba(0,0,0,1)";
       ctx.beginPath();
       ctx.arc(...avg, r, 0, 2 * Math.PI, false);
       ctx.fill();
       ctx.font = `0.01em sans-serif`;
       ctx.textAlign = "left";
-      ctx.fillText(idx, ...avg,50); 
+      ctx.fillText(idx, ...avg, 50);
     }
   });
 };
@@ -79,7 +111,10 @@ const inputAreaTextChangedHandler = (e) => {
   parsed = { parsed: parsedInput, halfEdgeStructure: halfEdgeStructure };
   render(parsed);
 };
-
-// buttonsContainer;
+const NeighborVisualizerInputHandler = (e) => {
+  if (parsed?.halfEdgeStructure)
+    renderFaceNeighbors(parsed?.halfEdgeStructure, Number(e.target.value));
+};
 inputArea.addEventListener("keyup", inputAreaTextChangedHandler, false);
+indexInput.addEventListener("keyup", NeighborVisualizerInputHandler, false);
 window.addEventListener("resize", resizeCanvasHandler);
