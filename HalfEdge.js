@@ -1,5 +1,5 @@
 import {createVertex, createEdge} from './TypeHelpers'
-import {calculateAngle, sortEdges} from './Utilities'
+import {calculateAngle, sortEdgesAroundEachVertex} from './Utilities'
 export const createHalfEdgeStore = ({ vertices, edges }) => {
   const store = {
     vertices: [],
@@ -17,16 +17,14 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
       const insertionIdx = i * 2;
       const from = store.vertices[edges[i][0]];
       const to = store.vertices[edges[i][1]];
-      store.edges[insertionIdx] = createEdge(from, to, calculateAngle(from, to));
-      from.outBoundEdges.push(store.edges[insertionIdx])
-      store.edges[insertionIdx + 1] = createEdge(to, from, calculateAngle(to, from));
-      to.outBoundEdges.push(store.edges[insertionIdx + 1])
-      store.edges[insertionIdx].twin = store.edges[insertionIdx + 1];
-      store.edges[insertionIdx + 1].twin = store.edges[insertionIdx];
+      store.edges[insertionIdx] = createEdge(insertionIdx,from, to, calculateAngle(from, to));
+      from.outBoundEdgesIdx.push(insertionIdx)
+      store.edges[insertionIdx + 1] = createEdge(insertionIdx + 1,to, from, calculateAngle(to, from));
+      to.outBoundEdgesIdx.push(insertionIdx + 1)
+      store.edges[insertionIdx].twinIdx = insertionIdx + 1;
+      store.edges[insertionIdx + 1].twinIdx = insertionIdx;
     }
-    for (const vertex of store.vertices) {
-      sortEdges(vertex);
-    }
+    sortEdgesAroundEachVertex(store);
     // const tempEdges = [...store.edges]
     for (const edge of store.edges) {
       if (edge.visited) continue;
@@ -34,9 +32,10 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
       store.faces.push(face);
       let current = edge;
       do {
-        face.push(store.edges.indexOf(current));
+        face.push(current.index);
         current.visited = true;
-        current = current.twin.next;
+        let twin = store.edges[current.twinIdx]
+        current = store.edges[twin.nextIdx];
       } while (current !== edge);
     }
   };

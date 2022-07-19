@@ -1,13 +1,14 @@
-export const createVertex = (index = null, point = [], outBoundEdges = []) => ({
+export const createVertex = (index = null, point = [], outBoundEdgesIdx = []) => ({
   index,
   point,
-  outBoundEdges: [],
+  outBoundEdgesIdx: [],
 });
-export const createEdge = (from, to, angle,visited=false,next=null,twin=null) => ({
+export const createEdge = (index,from, to, angle,visited=false,nextIdx=null,twinIdx=null) => ({
+  index,
   visited,
   to,
   from,
   angle,
-  next,
-  twin,
+  nextIdx,
+  twinIdx,
 });
