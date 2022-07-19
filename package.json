@@ -1,0 +1,14 @@
+{
+  "name": "polygon-finder",
+  "private": true,
+  "author": "Sherif Tarabishy",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite example",
+    "build": "vite build example"
+  },
+  "main": "example/main.js",
+  "devDependencies": {
+    "vite": "^2.9.9"
+  }
+}
