@@ -18,25 +18,32 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
     faceEdgesIdx.sort((a, b) => a - b).join(",");
   const calculateAngle = (from, to) =>
     Math.atan2(to.point[1] - from.point[1], to.point[0] - from.point[0]);
-  const getFaceEdgesFromEdgeIdx=(edgeIdx)=>{
-    const tempStore=[]
-    const edge = store.edges[edgeIdx]
-    let current = edge
+  const iterateFaceFromEdgeIdx=(edgeIdx, propertySelector=(x)=>x)=>{
+    const tempStore = [];
+    const edge = store.edges[edgeIdx];
+    let current = edge;
     do {
-      tempStore.push(current)
+      tempStore.push(propertySelector(current));
       let twin = store.edges[current.twinIdx];
       current = store.edges[twin.nextIdx];
     } while (current !== edge);
     return tempStore;
   }
+  const getFaceNeighborsFromFaceName = (faceName) => {
+    const face = store.faces[faceName]
+    const edges = iterateFaceFromEdgeIdx(face.edgeIdx)
+    const neighborFaces = []
+    edges.map(edge=>{
+      const neighborFaceEdges = iterateFaceFromEdgeIdx(edge.twinIdx)
+      neighborFaces.push(getFaceName(neighborFaceEdges.map(x=>x.index)))
+    })
+    return neighborFaces
+  };
   const store = {
     vertices: [],
     edges: [],
     faces: {},
   };
-  // const findFaceNeighbors=(HalfEdgeStore, faceIdx)=>{
-  //   HalfEdgeStore.faces[faceIdx]
-  // }
   const initialize = (vertices, edges) => {
     vertices.map((vertex, idx) => {
       store.vertices.push(createVertex(idx, vertex));
@@ -84,8 +91,22 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
       );
     }
   };
+  const initializeJson = (json) => {
+    const parsed = JSON.parse(json);
+    if (!(parsed["vertices"] || parsed["edges"] || parsed["faces"])) {
+      console.log("Need all keys:['vertices', 'edges', 'faces']");
+    }
+    store.vertices = parsed.vertices;
+    store.edges = parsed.edges;
+    store.faces = parsed.faces;
+  };
+  const dumpToJson = () => {
+    JSON.stringify(store);
+  };
   if (vertices?.length > 0 && edges?.length > 0) {
     initialize(vertices, edges);
+  } else if (json) {
+    initializeJson(json);
   }
-  return [store,{getFaceName, getFaceEdgesFromEdgeIdx}];
+  return [store, { getFaceName, getFaceNeighborsFromFaceName, dumpToJson, iterateFaceFromEdgeIdx }];
 };
