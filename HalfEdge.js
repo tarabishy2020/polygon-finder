@@ -26,16 +26,18 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
       store.edges[insertionIdx].twinIdx = insertionIdx + 1;
       store.edges[insertionIdx + 1].twinIdx = insertionIdx;
     }
+    
     sortEdgesAroundEachVertex(store);
-    // const tempEdges = [...store.edges]
+
+    const visited = []
     for (const edge of store.edges) {
-      if (edge.visited) continue;
+      if (visited[edge.index]) continue;
       const face = [];
       store.faces.push(face);
       let current = edge;
       do {
         face.push(current.index);
-        current.visited = true;
+        visited[current.index] = true
         let twin = store.edges[current.twinIdx]
         current = store.edges[twin.nextIdx];
       } while (current !== edge);
