@@ -70,10 +70,11 @@ const addExampleButtons = (parentNodeId, inputArea) => {
       inputArea.dispatchEvent(new Event("keyup"));
     };
   });
-
+  // Input area used to feed a face index
   const indexInput = document.createElement("input");
   indexInput.placeholder='enter index';
   element.appendChild(indexInput)
+  // point picker
   
   return [element, indexInput];
 };

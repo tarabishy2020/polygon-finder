@@ -11,18 +11,18 @@ export const createEdge = (
   index,
   fromIdx,
   toIdx,
-  angle,
   visited = false,
   nextIdx = null,
-  twinIdx = null
+  twinIdx = null,
+  faceIdx = null
 ) => ({
   index,
   toIdx,
   fromIdx,
-  angle,
+  faceIdx,
   nextIdx,
   twinIdx,
 });
-export const createFace = (name, edgeIdx, border = false) => ({
-  [name]: { edgeIdx, border },
+export const createFace = (index,edgeIdx, border = false) => ({
+  index,edgeIdx, border
 });

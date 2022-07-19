@@ -15,7 +15,7 @@ const drawingThickness = 0.01;
 const getRandomColor = () =>
   `rgba(${255 * Math.random()},${255 * Math.random()},${
     255 * Math.random()
-  },0.5)`;
+  },0.3)`;
 
 const drawLine = (from, to) => {
   ctx.beginPath();
@@ -24,6 +24,11 @@ const drawLine = (from, to) => {
   ctx.lineTo(...to);
   ctx.stroke();
 };
+const drawArc=(vertex, r=drawingThickness * 4)=>{
+  ctx.beginPath();
+  ctx.arc(...vertex, r, 0, 2 * Math.PI, false);
+  ctx.fill();
+}
 const drawFace = (vertices) => {
   vertices.map((vertex, idx) => {
     if (idx === 0) ctx.moveTo(...vertex);
@@ -34,39 +39,35 @@ const renderInputData = ({ edges, vertices }) => {
   for (const edge of edges) {
     drawLine(vertices[edge[0]], vertices[edge[1]]);
   }
-  const r = drawingThickness * 4;
   for (const vertex of vertices) {
-    ctx.beginPath();
-    ctx.arc(...vertex, r, 0, 2 * Math.PI, false);
-    ctx.fill();
+    drawArc(vertex)
   }
 };
 const renderFaceNeighbors = (json, idx) => {
   const [
     { vertices, faces },
-    { iterateFaceFromEdgeIdx, getFaceNeighborsFromFaceName },
+    { iterateFaceFromEdgeIdx, getFaceNeighborsFromFaceIdx },
   ] = createHalfEdgeStore({ json });
-  if (Object.keys(faces).length < idx) return;
+  if (faces.length < idx) return;
   render(parsed);
-  const faceName = Object.keys(faces)[idx];
-  const centroidFromName = (name) => {
+  const centroidFromFaceIdx = (faceIdx) => {
     const selectedFacePoints = iterateFaceFromEdgeIdx(
-      faces[name].edgeIdx,
+      faces[faceIdx].edgeIdx,
       (x) => vertices[x.fromIdx].point
     );
     return averagePoints(selectedFacePoints);
   };
-  const from = centroidFromName(faceName);
-  const neighborNames = getFaceNeighborsFromFaceName(faceName);
-  const neighborCentroids = neighborNames.map((name) => centroidFromName(name));
+  const from = centroidFromFaceIdx(idx);
+  const neighborsIdx = getFaceNeighborsFromFaceIdx(idx);
+  const neighborCentroids = neighborsIdx.map((id) => centroidFromFaceIdx(id));
   neighborCentroids.map((to) => drawLine(from, to));
 };
 const renderHedgeFaces = (
   [{ vertices, edges, faces }, { iterateFaceFromEdgeIdx }],
   renderCentroid = false
 ) => {
-  Object.entries(faces).map(([k, face], idx) => {
-    if (idx == 9) return;
+  faces.map((face) => {
+    if (face.index == 9) return;
     ctx.fillStyle = getRandomColor();
     const faceVertices = iterateFaceFromEdgeIdx(
       face.edgeIdx,
@@ -80,12 +81,10 @@ const renderHedgeFaces = (
       const r = drawingThickness * 4;
       const avg = averagePoints(faceVertices);
       ctx.fillStyle = "rgba(0,0,0,1)";
-      ctx.beginPath();
-      ctx.arc(...avg, r, 0, 2 * Math.PI, false);
-      ctx.fill();
+      drawArc(avg, drawingThickness*2)
       ctx.font = `0.01em sans-serif`;
       ctx.textAlign = "left";
-      ctx.fillText(idx, ...avg, 50);
+      ctx.fillText(face.index, ...avg, 50);
     }
   });
 };

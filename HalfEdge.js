@@ -1,21 +1,20 @@
 import { createVertex, createEdge, createFace } from "./TypeHelpers";
 export const createHalfEdgeStore = ({ vertices, edges, json }) => {
-  const sortEdgesAroundEachVertex = (halfEdgeStore) => {
-    halfEdgeStore.vertices.map((vertex) => {
+  const sortEdgesAroundEachVertex = (angles) => {
+    store.vertices.map((vertex) => {
       vertex.outBoundEdgesIdx.sort(
         (edgeIdx, anotheredgeIdx) =>
-          halfEdgeStore.edges[edgeIdx].angle -
-          halfEdgeStore.edges[anotheredgeIdx].angle
+        angles[edgeIdx] -
+        angles[anotheredgeIdx]
       );
       let prevIdx = vertex.outBoundEdgesIdx[vertex.outBoundEdgesIdx.length - 1];
       for (const edgeIdx of vertex.outBoundEdgesIdx) {
-        halfEdgeStore.edges[edgeIdx].nextIdx = prevIdx;
+        store.edges[edgeIdx].nextIdx = prevIdx;
         prevIdx = edgeIdx;
       }
     });
   };
-  const getFaceName = (faceEdgesIdx) =>
-    faceEdgesIdx.sort((a, b) => a - b).join(",");
+
   const calculateAngle = (from, to) =>
     Math.atan2(to.point[1] - from.point[1], to.point[0] - from.point[0]);
   const iterateFaceFromEdgeIdx=(edgeIdx, propertySelector=(x)=>x)=>{
@@ -29,25 +28,27 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     } while (current !== edge);
     return tempStore;
   }
-  const getFaceNeighborsFromFaceName = (faceName) => {
-    const face = store.faces[faceName]
-    const edges = iterateFaceFromEdgeIdx(face.edgeIdx)
+  const getFaceNeighborsFromFaceIdx = (faceIdx) => {
+    const edges = iterateFaceFromEdgeIdx(store.faces[faceIdx].edgeIdx)
     const neighborFaces = []
     edges.map(edge=>{
-      const neighborFaceEdges = iterateFaceFromEdgeIdx(edge.twinIdx)
-      neighborFaces.push(getFaceName(neighborFaceEdges.map(x=>x.index)))
+      neighborFaces.push(store.edges[edge.twinIdx].faceIdx)
     })
     return neighborFaces
   };
   const store = {
     vertices: [],
     edges: [],
-    faces: {},
+    faces: [],
   };
+  // timeComplexity: ((Avg.Valence log Avg.Valence) * v) + e
   const initialize = (vertices, edges) => {
+    // timeComplexity: v
     vertices.map((vertex, idx) => {
       store.vertices.push(createVertex(idx, vertex));
     });
+    // timeComplexity: 2e
+    const angles=[]
     for (let i = 0; i < edges.length; i++) {
       const insertionIdx = i * 2;
       const fromIdx = edges[i][0];
@@ -57,38 +58,39 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
       store.edges[insertionIdx] = createEdge(
         insertionIdx,
         fromIdx,
-        toIdx,
-        calculateAngle(fromVtx, toVtx)
+        toIdx
       );
+      angles[insertionIdx] = calculateAngle(fromVtx, toVtx)
       fromVtx.outBoundEdgesIdx.push(insertionIdx);
       store.edges[insertionIdx + 1] = createEdge(
         insertionIdx + 1,
         toIdx,
-        fromIdx,
-        calculateAngle(toVtx, fromVtx)
+        fromIdx
       );
+      angles[insertionIdx + 1] = calculateAngle(toVtx, fromVtx)
       toVtx.outBoundEdgesIdx.push(insertionIdx + 1);
       store.edges[insertionIdx].twinIdx = insertionIdx + 1;
       store.edges[insertionIdx + 1].twinIdx = insertionIdx;
     }
 
-    sortEdgesAroundEachVertex(store);
+    // timeComplexity: (Avg.Valence log Avg.Valence) * v 
+    sortEdgesAroundEachVertex(angles);
 
     const visited = [];
+    // timeComplexity: 2e
+    let fInsertionIdx = 0;
     for (const edge of store.edges) {
       if (visited[edge.index]) continue;
       const faceEdgesIdx = [];
       let current = edge;
       do {
-        faceEdgesIdx.push(current.index);
+        current.faceIdx = fInsertionIdx;
         visited[current.index] = true;
         let twin = store.edges[current.twinIdx];
         current = store.edges[twin.nextIdx];
       } while (current !== edge);
-      Object.assign(
-        store.faces,
-        createFace(getFaceName(faceEdgesIdx), edge.index)
-      );
+      store.faces.push(createFace(fInsertionIdx, edge.index))
+      fInsertionIdx++;
     }
   };
   const initializeJson = (json) => {
@@ -107,5 +109,5 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
   } else if (json) {
     initializeJson(json);
   }
-  return [store, { getFaceName, getFaceNeighborsFromFaceName, dumpToJson, iterateFaceFromEdgeIdx }];
+  return [store, {getFaceNeighborsFromFaceIdx, dumpToJson, iterateFaceFromEdgeIdx }];
 };
