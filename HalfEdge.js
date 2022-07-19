@@ -1,5 +1,5 @@
 import { createVertex, createEdge, createFace } from "./TypeHelpers";
-export const createHalfEdgeStore = ({ vertices, edges }) => {
+export const createHalfEdgeStore = ({ vertices, edges, json }) => {
   const sortEdgesAroundEachVertex = (halfEdgeStore) => {
     halfEdgeStore.vertices.map((vertex) => {
       vertex.outBoundEdgesIdx.sort(
@@ -100,9 +100,8 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
     store.edges = parsed.edges;
     store.faces = parsed.faces;
   };
-  const dumpToJson = () => {
-    JSON.stringify(store);
-  };
+  const dumpToJson = () => JSON.stringify(store);
+
   if (vertices?.length > 0 && edges?.length > 0) {
     initialize(vertices, edges);
   } else if (json) {

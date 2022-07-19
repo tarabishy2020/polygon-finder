@@ -41,14 +41,12 @@ const renderInputData = ({ edges, vertices }) => {
     ctx.fill();
   }
 };
-const renderFaceNeighbors = (
-  [
+const renderFaceNeighbors = (json, idx) => {
+  const [
     { vertices, faces },
     { iterateFaceFromEdgeIdx, getFaceNeighborsFromFaceName },
-  ],
-  idx
-) => {
-  if(Object.keys(faces).length < idx)return;
+  ] = createHalfEdgeStore({ json });
+  if (Object.keys(faces).length < idx) return;
   render(parsed);
   const faceName = Object.keys(faces)[idx];
   const centroidFromName = (name) => {
@@ -113,7 +111,10 @@ const inputAreaTextChangedHandler = (e) => {
 };
 const NeighborVisualizerInputHandler = (e) => {
   if (parsed?.halfEdgeStructure)
-    renderFaceNeighbors(parsed?.halfEdgeStructure, Number(e.target.value));
+    renderFaceNeighbors(
+      parsed?.halfEdgeStructure[1].dumpToJson(),
+      Number(e.target.value)
+    );
 };
 inputArea.addEventListener("keyup", inputAreaTextChangedHandler, false);
 indexInput.addEventListener("keyup", NeighborVisualizerInputHandler, false);
