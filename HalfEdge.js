@@ -15,12 +15,14 @@ export const createHalfEdgeStore = ({ vertices, edges }) => {
     });
     for (let i = 0; i < edges.length; i++) {
       const insertionIdx = i * 2;
-      const from = store.vertices[edges[i][0]];
-      const to = store.vertices[edges[i][1]];
-      store.edges[insertionIdx] = createEdge(insertionIdx,from, to, calculateAngle(from, to));
-      from.outBoundEdgesIdx.push(insertionIdx)
-      store.edges[insertionIdx + 1] = createEdge(insertionIdx + 1,to, from, calculateAngle(to, from));
-      to.outBoundEdgesIdx.push(insertionIdx + 1)
+      const fromIdx = edges[i][0];
+      const toIdx = edges[i][1];
+      const fromVtx = store.vertices[fromIdx];
+      const toVtx = store.vertices[toIdx];
+      store.edges[insertionIdx] = createEdge(insertionIdx,fromIdx, toIdx, calculateAngle(fromVtx, toVtx));
+      fromVtx.outBoundEdgesIdx.push(insertionIdx)
+      store.edges[insertionIdx + 1] = createEdge(insertionIdx + 1,toIdx, fromIdx, calculateAngle(toVtx, fromVtx));
+      toVtx.outBoundEdgesIdx.push(insertionIdx + 1)
       store.edges[insertionIdx].twinIdx = insertionIdx + 1;
       store.edges[insertionIdx + 1].twinIdx = insertionIdx;
     }
