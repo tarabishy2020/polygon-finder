@@ -12,10 +12,12 @@ const createCanvas = (parentNodeId) => {
   container.appendChild(element);
   const ctx = element.getContext("2d");
   const resize = () => {
-    element.width = element.offsetWidth;
-    element.height = element.offsetHeight;
+    element.width = window?.devicePixelRatio > 1 ?  element.offsetWidth * window.devicePixelRatio : element.offsetWidth;
+    element.height = window?.devicePixelRatio > 1 ? element.offsetHeight * window.devicePixelRatio : element.offsetWidth;
     ctx.translate(element.width / 2, element.height / 2);
-    ctx.scale(100, 100);
+    let smaller = Math.min(element.width, element.height)
+    let mult = smaller / 10
+    ctx.scale(mult, mult);
   };
   resize();
   return [ctx, resize];
