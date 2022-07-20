@@ -74,9 +74,12 @@ const addExampleButtons = (parentNodeId, inputArea) => {
   const indexInput = document.createElement("input");
   indexInput.placeholder='enter index';
   element.appendChild(indexInput)
-  // point picker
-  
-  return [element, indexInput];
+  // Face walker
+  const spreadButton = document.createElement("button");
+  spreadButton.innerHTML = "spread from index";
+  element.appendChild(spreadButton);
+
+  return [element, indexInput, spreadButton];
 };
 const createButton=(parent,text,onClickHandler)=>{
   const btn = document.createElement("button");
@@ -87,4 +90,4 @@ const createButton=(parent,text,onClickHandler)=>{
 }
 export const [ctx, resizeCanvasFn] = createCanvas("app");
 export const inputArea = createInputArea("app");
-export const [buttonsContainer, indexInput]= addExampleButtons("app", inputArea);
+export const [buttonsContainer, indexInput, spreadButton]= addExampleButtons("app", inputArea);

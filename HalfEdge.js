@@ -40,14 +40,56 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     } while (current !== edge);
     return tempStore;
   };
+  /**
+   * Given a face index return the indeces of neighboring faces that share an edge
+   * @param {int} faceIdx index of face in `store.faces`
+   * @returns {Array} indeces of neighboring faces
+   */
   const getFaceNeighborsFromFaceIdx = (faceIdx) => {
     const edges = iterateFaceFromEdgeIdx(store.faces[faceIdx].edgeIdx);
     const neighborFaces = [];
     edges.map((edge) => {
-      neighborFaces.push(store.edges[edge.twinIdx].faceIdx);
+      const newFaceIdx = store.edges[edge.twinIdx].faceIdx
+      if (!store.faces[newFaceIdx].border) neighborFaces.push(newFaceIdx);
     });
     return neighborFaces;
   };
+  /**
+   * 
+   * @param {int} rootIdx Face index to start branching from
+   * @returns {Array} nested arrays, first level represents each depth step, second level of nesting represents children of a parent node in the previous level when flattened and cleaned.
+   */
+  const walkFromFaceIdx = (rootIdx) => {
+    const levels = [];
+    const toVisit = [];
+    const visitedFaces = [];
+    toVisit.push([rootIdx]);
+    visitedFaces[rootIdx] = true;
+    let counter = 0;
+    while (toVisit.length > 0 && counter < store.faces.length) {
+      const thisLevel = toVisit.splice(0, toVisit.length);
+      levels.push(thisLevel);
+      thisLevel.map((parents) => {
+        parents.map((faceIdx) => {
+          const edges = iterateFaceFromEdgeIdx(store.faces[faceIdx].edgeIdx);
+          const tempStore = [];
+          edges.map((edge) => {
+            const newfaceIdx = store.edges[edge.twinIdx].faceIdx;
+            if (!visitedFaces[newfaceIdx] && !store.faces[newfaceIdx].border){
+              tempStore.push(newfaceIdx);
+              visitedFaces[newfaceIdx] = true;
+            }
+          });
+          toVisit.push(tempStore);
+        });
+      });
+      counter++;
+    }
+    return levels;
+  };
+  /**
+   * Storage only elements we need to serialize/deserialize for this to work
+   */
   const store = {
     vertices: [],
     edges: [],
@@ -88,11 +130,13 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     // timeComplexity: 2e
     let fInsertionIdx = 0;
     // counts edges! not the best way to detect border - could area be better?!
-    let faceEdgeCount=0; 
+    // Don't count edge - check crv direction https://en.wikipedia.org/wiki/Curve_orientation#Practical_considerations
+    // outer one will always be opposite to innser ones
+    let faceEdgeCount = 0;
     let largestNumOfEdgesIdx = 0;
     for (const edge of store.edges) {
       if (visited[edge.index]) continue;
-      let counter = 0
+      let counter = 0;
       let current = edge;
       do {
         current.faceIdx = fInsertionIdx;
@@ -101,10 +145,13 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
         counter++;
       } while (current !== edge);
       store.faces.push(createFace(fInsertionIdx, edge.index));
-      if (counter > faceEdgeCount) {largestNumOfEdgesIdx = fInsertionIdx; faceEdgeCount = counter;}
+      if (counter > faceEdgeCount) {
+        largestNumOfEdgesIdx = fInsertionIdx;
+        faceEdgeCount = counter;
+      }
       fInsertionIdx++;
     }
-    store.faces[largestNumOfEdgesIdx].border=true
+    store.faces[largestNumOfEdgesIdx].border = true;
   };
   /**
    * deserialize store from json. Check "dumpToJson" function.
@@ -133,6 +180,11 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
   }
   return [
     store,
-    { getFaceNeighborsFromFaceIdx, dumpToJson, iterateFaceFromEdgeIdx },
+    {
+      getFaceNeighborsFromFaceIdx,
+      dumpToJson,
+      walkFromFaceIdx,
+      iterateFaceFromEdgeIdx,
+    },
   ];
 };

@@ -5,6 +5,7 @@ import {
   inputArea,
   buttonsContainer,
   indexInput,
+  spreadButton,
 } from "./BasicCanvasSetup";
 import { parseVEJson } from "../InputData";
 import { createHalfEdgeStore } from "../HalfEdge";
@@ -24,11 +25,11 @@ const drawLine = (from, to) => {
   ctx.lineTo(...to);
   ctx.stroke();
 };
-const drawArc=(vertex, r=drawingThickness * 4)=>{
+const drawArc = (vertex, r = drawingThickness * 4) => {
   ctx.beginPath();
   ctx.arc(...vertex, r, 0, 2 * Math.PI, false);
   ctx.fill();
-}
+};
 const drawFace = (vertices) => {
   vertices.map((vertex, idx) => {
     if (idx === 0) ctx.moveTo(...vertex);
@@ -40,8 +41,20 @@ const renderInputData = ({ edges, vertices }) => {
     drawLine(vertices[edge[0]], vertices[edge[1]]);
   }
   for (const vertex of vertices) {
-    drawArc(vertex)
+    drawArc(vertex);
   }
+};
+const centroidFromFaceIdx = (
+  faceIdx,
+  iterateFaceFromEdgeIdx,
+  vertices,
+  faces
+) => {
+  const selectedFacePoints = iterateFaceFromEdgeIdx(
+    faces[faceIdx].edgeIdx,
+    (x) => vertices[x.fromIdx].point
+  );
+  return averagePoints(selectedFacePoints);
 };
 const renderFaceNeighbors = (json, idx) => {
   const [
@@ -50,17 +63,43 @@ const renderFaceNeighbors = (json, idx) => {
   ] = createHalfEdgeStore({ json });
   if (faces.length < idx) return;
   render(parsed);
-  const centroidFromFaceIdx = (faceIdx) => {
-    const selectedFacePoints = iterateFaceFromEdgeIdx(
-      faces[faceIdx].edgeIdx,
-      (x) => vertices[x.fromIdx].point
-    );
-    return averagePoints(selectedFacePoints);
-  };
-  const from = centroidFromFaceIdx(idx);
+  const from = centroidFromFaceIdx(
+    idx,
+    iterateFaceFromEdgeIdx,
+    vertices,
+    faces
+  );
   const neighborsIdx = getFaceNeighborsFromFaceIdx(idx);
-  const neighborCentroids = neighborsIdx.map((id) => centroidFromFaceIdx(id));
+  const neighborCentroids = neighborsIdx.map((id) =>
+    centroidFromFaceIdx(id, iterateFaceFromEdgeIdx, vertices, faces)
+  );
   neighborCentroids.map((to) => drawLine(from, to));
+};
+const renderWalkers = (json, idx) => {
+  const [{ vertices, faces }, { iterateFaceFromEdgeIdx, walkFromFaceIdx }] =
+    createHalfEdgeStore({ json });
+  const levels = walkFromFaceIdx(idx);
+  console.log(levels);
+  for (let i = 0; i < levels.length - 2; i++) {
+    const current = levels[i].flat();
+    current.map((fromFace, idx) => {
+      const from = centroidFromFaceIdx(
+        fromFace,
+        iterateFaceFromEdgeIdx,
+        vertices,
+        faces
+      );
+      levels[i + 1][idx]?.map((toFace) => {
+        const to = centroidFromFaceIdx(
+          toFace,
+          iterateFaceFromEdgeIdx,
+          vertices,
+          faces
+        );
+        drawLine(from, to);
+      });
+    });
+  }
 };
 const renderHedgeFaces = (
   [{ vertices, edges, faces }, { iterateFaceFromEdgeIdx }],
@@ -81,7 +120,7 @@ const renderHedgeFaces = (
       const r = drawingThickness * 4;
       const avg = averagePoints(faceVertices);
       ctx.fillStyle = "rgba(0,0,0,1)";
-      drawArc(avg, drawingThickness*2)
+      drawArc(avg, drawingThickness * 2);
       ctx.font = `0.01em sans-serif`;
       ctx.textAlign = "left";
       ctx.fillText(face.index, ...avg, 50);
@@ -109,12 +148,18 @@ const inputAreaTextChangedHandler = (e) => {
   render(parsed);
 };
 const NeighborVisualizerInputHandler = (e) => {
-  if (parsed?.halfEdgeStructure)
+  if (parsed?.halfEdgeStructure && e.target.value)
     renderFaceNeighbors(
       parsed?.halfEdgeStructure[1].dumpToJson(),
       Number(e.target.value)
     );
 };
-inputArea.addEventListener("keyup", inputAreaTextChangedHandler, false);
-indexInput.addEventListener("keyup", NeighborVisualizerInputHandler, false);
+const SpreadButtonPressedHandler = () => {
+  const index = indexInput.value;
+  if (parsed?.halfEdgeStructure && index)
+    renderWalkers(parsed?.halfEdgeStructure[1].dumpToJson(), Number(index));
+};
 window.addEventListener("resize", resizeCanvasHandler);
+indexInput.addEventListener("keyup", NeighborVisualizerInputHandler, false);
+spreadButton.onclick = SpreadButtonPressedHandler;
+inputArea.addEventListener("keyup", inputAreaTextChangedHandler, false);
