@@ -11,8 +11,7 @@ The repo uses vite to build the example folder. Just run `npm i` followed by `np
 
 ## API
 ### createHalfEdgeStore
-Main function to help creating a half-edge structure and providing relvant APIs to query an navigate it.
-
+Main function to help creating a half-edge structure and providing relvant APIs to query and navigate it.
 
 ## Example
 The example exposes an input area at the bottom to input JSON data defining a list of edges and vertices.
