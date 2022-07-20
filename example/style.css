@@ -39,6 +39,7 @@ body {
 .example-buttons {
   grid-area: "buttons";
   display: flex;
+  flex-wrap: wrap;
   padding: 5px 5px 5px 0;
 }
 .example-buttons > * {
