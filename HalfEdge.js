@@ -87,18 +87,24 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     const visited = [];
     // timeComplexity: 2e
     let fInsertionIdx = 0;
+    // counts edges! not the best way to detect border - could area be better?!
+    let faceEdgeCount=0; 
+    let largestNumOfEdgesIdx = 0;
     for (const edge of store.edges) {
       if (visited[edge.index]) continue;
-      const faceEdgesIdx = [];
+      let counter = 0
       let current = edge;
       do {
         current.faceIdx = fInsertionIdx;
         visited[current.index] = true;
         current = store.edges[current.nextIdx];
+        counter++;
       } while (current !== edge);
       store.faces.push(createFace(fInsertionIdx, edge.index));
+      if (counter > faceEdgeCount) {largestNumOfEdgesIdx = fInsertionIdx; faceEdgeCount = counter;}
       fInsertionIdx++;
     }
+    store.faces[largestNumOfEdgesIdx].border=true
   };
   /**
    * deserialize store from json. Check "dumpToJson" function.

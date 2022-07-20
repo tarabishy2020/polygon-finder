@@ -67,7 +67,7 @@ const renderHedgeFaces = (
   renderCentroid = false
 ) => {
   faces.map((face) => {
-    if (face.index == 9) return;
+    if (face.border) return;
     ctx.fillStyle = getRandomColor();
     const faceVertices = iterateFaceFromEdgeIdx(
       face.edgeIdx,
