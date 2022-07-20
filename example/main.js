@@ -79,7 +79,6 @@ const renderWalkers = (json, idx) => {
   const [{ vertices, faces }, { iterateFaceFromEdgeIdx, walkFromFaceIdx }] =
     createHalfEdgeStore({ json });
   const levels = walkFromFaceIdx(idx);
-  console.log(levels);
   for (let i = 0; i < levels.length - 2; i++) {
     const current = levels[i].flat();
     current.map((fromFace, idx) => {
