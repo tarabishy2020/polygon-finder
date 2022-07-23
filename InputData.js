@@ -4,15 +4,14 @@
  * @returns {Object}
  */
 export const parseVEJson = (json) => {
-  if (!json) return null;
-
+  if (!json) return undefined;
   try {
     const parsed = JSON.parse(json, (k, v) => {
       return typeof v === "object" || isNaN(v) ? v : parseFloat(v);
     });
     if (!(parsed["vertices"] || parsed["edges"])) {
       console.log("Need all keys:['vertices', 'edges']");
-      return null;
+      return undefined;
     }
     const DataStore = CreateInputDataStore();
     DataStore.addVertices(parsed["vertices"]);
@@ -26,7 +25,7 @@ export const parseVEJson = (json) => {
 export const CreateInputDataStore =()=>({
   vertices: [],
   edges: [],
-  addVertex: ([x, y]) => {
+  addVertex([x, y]) {
     const idx = this.vertices.length;
     this.vertices.push([x, y]);
     return idx;
