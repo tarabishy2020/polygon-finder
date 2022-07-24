@@ -14,7 +14,6 @@ const createCanvas = (parentNodeId) => {
   const resize = () => {
     const width = container.offsetWidth;
     const height =  container.offsetHeight;
-    console.log(container.offsetWidth, container.offsetHeight)
     const smaller = Math.min(width, height)*0.76
     element.width = smaller;
     element.height = smaller;
