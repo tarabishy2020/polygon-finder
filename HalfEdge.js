@@ -178,6 +178,7 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
   } else if (json) {
     initializeJson(json);
   }
+  else return undefined;
   return [
     store,
     {
