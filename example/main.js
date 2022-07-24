@@ -36,12 +36,29 @@ const drawFace = (vertices) => {
     else ctx.lineTo(...vertex);
   });
 };
-const renderInputData = ({ edges, vertices }) => {
-  for (const edge of edges) {
-    drawLine(vertices[edge[0]], vertices[edge[1]]);
+const renderInputData = ({ edges, vertices }, renderIdx = false) => {
+  for (let i = 0; i < edges.length; i++) {
+    const v1 = vertices[edges[i][0]]
+    const v2 = vertices[edges[i][1]]
+    drawLine(v1, v2);
+    if(renderIdx){
+      const avg = averagePoints([v1,v2]);
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      drawArc(avg, drawingThickness * 2);
+      ctx.font = `0.01em sans-serif`;
+      ctx.textAlign = "left";
+      ctx.fillText(`E: ${i}`, ...avg, 50);
+    }
   }
-  for (const vertex of vertices) {
-    drawArc(vertex);
+  for (let i = 0; i < vertices.length; i++) {
+    drawArc(vertices[i]);
+    if(renderIdx){
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      drawArc(vertices[i], drawingThickness * 2);
+      ctx.font = `0.01em sans-serif`;
+      ctx.textAlign = "left";
+      ctx.fillText(`V: ${i}`, ...vertices[i], 50);
+    }
   }
 };
 const centroidFromFaceIdx = (
