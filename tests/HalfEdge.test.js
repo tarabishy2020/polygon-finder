@@ -53,4 +53,13 @@ describe("Half Edge Store", () => {
         expect(borderEdges.length).toEqual(leftOut.length)
         expect(borderEdges).toEqual(expect.arrayContaining(leftOut))
     })
+    test('get to all faces but border from one',()=>{
+        const borderIdx = store.faces.filter((x) => x.border)[0].index
+        const startIdx =  borderIdx !== 0 ? 0 : 1
+        const levels = walkFromFaceIdx(startIdx).flat(Infinity)
+        const levelsSet = new Set([...levels])
+        const left = [...Array(store.faces.length).keys()].filter(x=> !levelsSet.has(x))
+        expect(left.length).toEqual(1)
+        expect(left[0]).toEqual(borderIdx)
+    })
 });
