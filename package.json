@@ -3,14 +3,17 @@
   "private": true,
   "author": "Sherif Tarabishy",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "vite example",
     "build": "vite build example",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "bench":"node --experimental-specifier-resolution=node ./benchmark/bench.js"
   },
   "main": "main.js",
   "devDependencies": {
+    "mitata": "^0.1.6",
     "vite": "^3.0.2",
     "vitest": "^0.18.1"
   }

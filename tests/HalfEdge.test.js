@@ -1,7 +1,7 @@
 import { assert, expect, test, describe } from "vitest";
-import { example1 } from "../exampleData/example1";
+import { example1 } from "../exampleData";
 import { parseVEJson } from "../InputData";
-import { createHalfEdgeStore } from "../HalfEdge";
+import { createHalfEdgeStore } from "../HalfEdge-optimize";
 
 const example = example1;
 describe("Half Edge Store", () => {
