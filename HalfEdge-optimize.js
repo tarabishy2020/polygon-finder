@@ -5,16 +5,18 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
    * @param {Array} angles array of angles for each edge measure from positive x-axis
    */
   const sortEdgesAroundEachVertex = (angles) => {
-    store.vertices.map((vertex) => {
+    for (let i = 0; i < store.vertices.length; i++) {
+      const vertex = store.vertices[i];
       vertex.outBoundEdgesIdx.sort(
         (edgeIdx, anotheredgeIdx) => angles[edgeIdx] - angles[anotheredgeIdx]
       );
       let prevIdx = vertex.outBoundEdgesIdx[vertex.outBoundEdgesIdx.length - 1];
-      for (const edgeIdx of vertex.outBoundEdgesIdx) {
+      for (let j = 0; j < vertex.outBoundEdgesIdx.length; j++) {
+        const edgeIdx = vertex.outBoundEdgesIdx[j];
         store.edges[store.edges[edgeIdx].twinIdx].nextIdx = prevIdx;
         prevIdx = edgeIdx;
       }
-    });
+    }
   };
   /**
    * calculate angle between a line and the positive x-axis
@@ -49,40 +51,43 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     const edges = iterateFaceFromEdgeIdx(store.faces[faceIdx].edgeIdx);
     const neighborFaces = [];
     edges.map((edge) => {
-      const newFaceIdx = store.edges[edge.twinIdx].faceIdx
+      const newFaceIdx = store.edges[edge.twinIdx].faceIdx;
       if (!store.faces[newFaceIdx].border) neighborFaces.push(newFaceIdx);
     });
     return neighborFaces;
   };
   /**
-   * 
+   *
    * @param {int} rootIdx Face index to start branching from
    * @returns {Array} nested arrays, first level represents each depth step, second level of nesting represents children of a parent node in the previous level when flattened and cleaned.
    */
   const walkFromFaceIdx = (rootIdx) => {
     const levels = [];
     const toVisit = [];
-    const visitedFaces = [];
+    const visitedFaces = new Array(store.faces.length);
     toVisit.push([rootIdx]);
     visitedFaces[rootIdx] = true;
     let counter = 0;
     while (toVisit.length > 0 && counter < store.faces.length) {
       const thisLevel = toVisit.splice(0, toVisit.length);
       levels.push(thisLevel);
-      thisLevel.map((parents) => {
-        parents.map((faceIdx) => {
+      for (let i = 0; i < thisLevel.length; i++) {
+        const parents = thisLevel[i];
+        for (let j = 0; j < parents.length; j++) {
+          const faceIdx = parents[j];
           const edges = iterateFaceFromEdgeIdx(store.faces[faceIdx].edgeIdx);
           const tempStore = [];
-          edges.map((edge) => {
+          for (let m = 0; m < edges.length; m++) {
+            const edge = edges[m];
             const newfaceIdx = store.edges[edge.twinIdx].faceIdx;
-            if (!visitedFaces[newfaceIdx] && !store.faces[newfaceIdx].border){
+            if (!visitedFaces[newfaceIdx] && !store.faces[newfaceIdx].border) {
               tempStore.push(newfaceIdx);
               visitedFaces[newfaceIdx] = true;
             }
-          });
+          }
           toVisit.push(tempStore);
-        });
-      });
+        }
+      }
       counter++;
     }
     return levels;
@@ -98,11 +103,14 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
   // timeComplexity: ((Avg.Valence log Avg.Valence) * v) + e
   const initialize = (vertices, edges) => {
     // timeComplexity: v
-    vertices.map((vertex, idx) => {
-      store.vertices.push(createVertex(idx, vertex));
-    });
+    store.vertices = new Array(vertices.length);
+    for (let i = 0; i < vertices.length; i++) {
+      store.vertices[i] = createVertex(i, vertices[i]);
+    }
+
     // timeComplexity: 2e
-    const angles = [];
+    const angles = new Array(edges.length * 2);
+    store.edges = new Array(edges.length * 2);
     for (let i = 0; i < edges.length; i++) {
       const insertionIdx = i * 2;
       const fromIdx = edges[i][0];
@@ -177,8 +185,7 @@ export const createHalfEdgeStore = ({ vertices, edges, json }) => {
     initialize(vertices, edges);
   } else if (json) {
     initializeJson(json);
-  }
-  else return undefined;
+  } else return undefined;
   return [
     store,
     {
